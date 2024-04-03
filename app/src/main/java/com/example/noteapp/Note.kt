@@ -3,7 +3,8 @@ class Note(
     var id: Int = 0,
     val title: String,
     val content: String,
-    val lastModified: String
+    val lastModified: String,
+    var isDeleted: Boolean = false
 ) {
     companion object {
         private var nextId = 1

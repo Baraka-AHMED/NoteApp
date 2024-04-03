@@ -61,11 +61,21 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun filterNotes(): List<Note> {
+        return notes.filter { !it.isDeleted }
+    }
+
     override fun onStart() {
         super.onStart()
         // Restaurer les notes sauvegardées
         notes.clear()
         notes.addAll(retrieveNotes())
+
+        // Filtrer les notes avec isDeleted à true
+        val filteredNotes = filterNotes()
+
+        noteAdapter = NoteAdapter(filteredNotes)
+        recyclerView.adapter = noteAdapter
         Log.d("MainActivity", "Notes restored: $notes")
     }
 

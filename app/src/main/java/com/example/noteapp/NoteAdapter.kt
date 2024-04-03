@@ -1,10 +1,14 @@
 package com.example.noteapp
 
+import android.graphics.Color
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
 import android.widget.TextView
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.snackbar.Snackbar
 
 class NoteAdapter(private val notes: List<Note>) :
     RecyclerView.Adapter<NoteAdapter.NoteViewHolder>() {
@@ -12,6 +16,8 @@ class NoteAdapter(private val notes: List<Note>) :
     inner class NoteViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val noteTitle: TextView = itemView.findViewById(R.id.text_note_title)
         val noteDate: TextView = itemView.findViewById(R.id.text_note_date)
+        val trashIcon: ImageView = itemView.findViewById(R.id.trash_icon)
+
 
     }
 
@@ -25,7 +31,32 @@ class NoteAdapter(private val notes: List<Note>) :
         val currentNote = notes[position]
         holder.noteTitle.text = currentNote.title
         holder.noteDate.text = currentNote.lastModified
+
+        // Ajouter un OnClickListener à l'icône de la poubelle
+        holder.trashIcon.setOnClickListener {
+            // Modifier l'attribut isDeleted de la note à true
+            notes[position].isDeleted = true
+            notifyDataSetChanged()
+
+            // Afficher un message de confirmation avec un bouton "Annuler"
+            val snackbar = Snackbar.make(
+                holder.itemView,
+                "Note déplacée vers la corbeille",
+                Snackbar.LENGTH_LONG
+            )
+            snackbar.setAction("Annuler") {
+                // Annuler le déplacement de la note
+                notes[position].isDeleted = false
+                notifyDataSetChanged()
+            }
+            snackbar.setActionTextColor(ContextCompat.getColor(holder.itemView.context, R.color.white)) // Couleur personnalisée pour le bouton "Annuler"
+            snackbar.show()
+        }
     }
+
+
+
+
 
     override fun getItemCount(): Int {
         return notes.size
