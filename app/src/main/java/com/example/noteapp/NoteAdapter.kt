@@ -1,5 +1,7 @@
 package com.example.noteapp
 
+import android.app.Activity
+import android.content.Intent
 import android.graphics.Color
 import android.view.LayoutInflater
 import android.view.View
@@ -12,6 +14,7 @@ import com.google.android.material.snackbar.Snackbar
 
 class NoteAdapter(private val notes: List<Note>) :
     RecyclerView.Adapter<NoteAdapter.NoteViewHolder>() {
+
 
     inner class NoteViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val noteTitle: TextView = itemView.findViewById(R.id.text_note_title)
@@ -49,16 +52,33 @@ class NoteAdapter(private val notes: List<Note>) :
                 notes[position].isDeleted = false
                 notifyDataSetChanged()
             }
-            snackbar.setActionTextColor(ContextCompat.getColor(holder.itemView.context, R.color.white)) // Couleur personnalisée pour le bouton "Annuler"
+            snackbar.setActionTextColor(
+                ContextCompat.getColor(
+                    holder.itemView.context,
+                    R.color.white
+                )
+            ) // Couleur personnalisée pour le bouton "Annuler"
             snackbar.show()
+        }
+
+        // Ajoutez un OnClickListener à la vue de l'élément
+        holder.itemView.setOnClickListener {
+            val intent = Intent(holder.itemView.context, AddNoteActivity::class.java)
+            intent.putExtra("noteId", currentNote.id)
+            intent.putExtra("noteTitle", currentNote.title)
+            intent.putExtra("noteContent", currentNote.content)
+            (holder.itemView.context as Activity).startActivityForResult(
+                intent,
+                MainActivity.EDIT_NOTE_REQUEST
+            )
+
         }
     }
 
 
 
 
-
     override fun getItemCount(): Int {
-        return notes.size
+        return notes.filter { !it.isDeleted }.size
     }
 }

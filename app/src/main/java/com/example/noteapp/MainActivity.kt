@@ -19,8 +19,11 @@ import java.util.Locale
 class MainActivity : AppCompatActivity() {
 
     private lateinit var notes: ArrayList<Note>
+    private lateinit var notesNotDeleted: List<Note>
+
     private lateinit var recyclerView: RecyclerView
     private lateinit var noteAdapter: NoteAdapter
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -46,15 +49,25 @@ class MainActivity : AppCompatActivity() {
             val noteTitle = data?.getStringExtra("noteTitle")
             val noteContent = data?.getStringExtra("noteContent")
             if (!noteTitle.isNullOrEmpty() || !noteContent.isNullOrEmpty()) {
-                val note = Note(
-                    id = 0,
-                    title = noteTitle ?: "",
-                    content = noteContent ?: "",
-                    lastModified = SimpleDateFormat("dd/MM/yyyy HH:mm:ss", Locale.getDefault()).format(
-                        Date()
+                if (requestCode == MainActivity.ADD_NOTE_REQUEST) {
+                    val note = Note(
+                        id = 0, // Vous devrez générer un nouvel ID unique pour chaque nouvelle note
+                        title = noteTitle ?: "",
+                        content = noteContent ?: "",
+                        lastModified = SimpleDateFormat("dd/MM/yyyy HH:mm:ss", Locale.getDefault()).format(Date())
                     )
-                )
-                notes.add(note)
+                    notes.add(note)
+                } else if (requestCode == MainActivity.EDIT_NOTE_REQUEST) {
+                    val noteId = data?.getIntExtra("noteId", -1)
+                    if (noteId != null && noteId != -1) {
+                        val note = notes.find { it.id == noteId }
+                        if (note != null) {
+                            note.title = noteTitle ?: note.title
+                            note.content = noteContent ?: note.content
+                            note.lastModified = SimpleDateFormat("dd/MM/yyyy HH:mm:ss", Locale.getDefault()).format(Date())
+                        }
+                    }
+                }
                 noteAdapter.notifyDataSetChanged()
                 saveNotes()
             }
@@ -72,9 +85,9 @@ class MainActivity : AppCompatActivity() {
         notes.addAll(retrieveNotes())
 
         // Filtrer les notes avec isDeleted à true
-        val filteredNotes = filterNotes()
+        notesNotDeleted = filterNotes()
 
-        noteAdapter = NoteAdapter(filteredNotes)
+        noteAdapter = NoteAdapter(notesNotDeleted)
         recyclerView.adapter = noteAdapter
         Log.d("MainActivity", "Notes restored: $notes")
     }
@@ -98,8 +111,9 @@ class MainActivity : AppCompatActivity() {
         val jsonNotes = sharedPreferences.getString("notes", null)
         return gson.fromJson(jsonNotes, object : TypeToken<List<Note>>() {}.type) ?: emptyList()
     }
-
     companion object {
         private const val ADD_NOTE_REQUEST = 1
+        const val EDIT_NOTE_REQUEST = 2
     }
+
 }

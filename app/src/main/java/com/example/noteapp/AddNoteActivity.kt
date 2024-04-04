@@ -37,6 +37,12 @@ class AddNoteActivity : AppCompatActivity() {
                 false
             }
         }
+
+        val noteTitle = intent.getStringExtra("noteTitle")
+        val noteContent = intent.getStringExtra("noteContent")
+
+        addNoteTitle.setText(noteTitle)
+        addNoteContent.setText(noteContent)
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
@@ -50,12 +56,13 @@ class AddNoteActivity : AppCompatActivity() {
     }
 
     private fun saveNoteIfNotEmpty() {
+        val noteId = intent.getIntExtra("noteId", 0)
         val noteTitle = addNoteTitle.text.toString().trim()
         val noteContent = addNoteContent.text.toString().trim()
 
         if (noteTitle.isNotEmpty() || noteContent.isNotEmpty()) {
-            // Créer un Intent pour renvoyer les données à MainActivity
             val intent = Intent().apply {
+                putExtra("noteId", noteId)
                 putExtra("noteTitle", noteTitle)
                 putExtra("noteContent", noteContent)
             }
@@ -66,6 +73,8 @@ class AddNoteActivity : AppCompatActivity() {
             finish()
         }
     }
+
+
 }
 
 
