@@ -1,23 +1,23 @@
-package com.example.noteapp
 class Note(
-    var id: Int = 0,
     var title: String,
     var content: String,
     var lastModified: String,
     var isDeleted: Boolean = false
 ) {
-    companion object {
-        private var nextId = 1
-
-        private fun getNextNoteId(): Int {
-            return nextId++
-        }
-    }
+    var id: Int = 0
+        private set
 
     init {
-        if (id == 0) {
-            id = getNextNoteId()
+        id = getNextNoteId()
+    }
+
+    companion object {
+        var nextId = 1
+
+        private fun getNextNoteId(): Int {
+            val id = nextId
+            nextId++
+            return id
         }
     }
 }
-

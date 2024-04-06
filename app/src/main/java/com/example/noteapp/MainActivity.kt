@@ -1,5 +1,6 @@
 package com.example.noteapp
 
+import Note
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
@@ -45,34 +46,52 @@ class MainActivity : AppCompatActivity() {
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
-        if (requestCode == ADD_NOTE_REQUEST && resultCode == Activity.RESULT_OK) {
-            val noteTitle = data?.getStringExtra("noteTitle")
-            val noteContent = data?.getStringExtra("noteContent")
-            if (!noteTitle.isNullOrEmpty() || !noteContent.isNullOrEmpty()) {
-                if (requestCode == MainActivity.ADD_NOTE_REQUEST) {
-                    val note = Note(
-                        id = 0, // Vous devrez générer un nouvel ID unique pour chaque nouvelle note
-                        title = noteTitle ?: "",
-                        content = noteContent ?: "",
-                        lastModified = SimpleDateFormat("dd/MM/yyyy HH:mm:ss", Locale.getDefault()).format(Date())
-                    )
-                    notes.add(note)
-                } else if (requestCode == MainActivity.EDIT_NOTE_REQUEST) {
+        if (resultCode == Activity.RESULT_OK) {
+            when (requestCode) {
+                ADD_NOTE_REQUEST -> {
+                    val noteTitle = data?.getStringExtra("noteTitle")
+                    val noteContent = data?.getStringExtra("noteContent")
+                    if (!noteTitle.isNullOrEmpty() || !noteContent.isNullOrEmpty()) {
+                        val note = Note(
+                            title = noteTitle ?: "",
+                            content = noteContent ?: "",
+                            lastModified = SimpleDateFormat("dd/MM/yyyy HH:mm:ss", Locale.getDefault()).format(Date())
+                        )
+                        notes.add(note)
+                        noteAdapter.notifyDataSetChanged( )
+                        saveNotes()
+                    }
+                }
+                EDIT_NOTE_REQUEST -> {
                     val noteId = data?.getIntExtra("noteId", -1)
+                    Log.d("Note ID", "Note $noteId")
+
+                    val noteTitle = data?.getStringExtra("noteTitle")
+                    val noteContent = data?.getStringExtra("noteContent")
                     if (noteId != null && noteId != -1) {
                         val note = notes.find { it.id == noteId }
+                        val n = note?.id
+                        Log.d("Note", "Note $n")
                         if (note != null) {
                             note.title = noteTitle ?: note.title
                             note.content = noteContent ?: note.content
-                            note.lastModified = SimpleDateFormat("dd/MM/yyyy HH:mm:ss", Locale.getDefault()).format(Date())
+                            //Si le titre ou le contenu a été mofifié on change lastModified
+                            if (note.title != noteTitle || note.content != noteContent) {
+                                note.lastModified = SimpleDateFormat(
+                                    "dd/MM/yyyy HH:mm:ss",
+                                    Locale.getDefault()
+                                ).format(Date())
+                            }
+                            noteAdapter.notifyDataSetChanged()
+                            saveNotes()
                         }
                     }
                 }
-                noteAdapter.notifyDataSetChanged()
-                saveNotes()
+
             }
         }
     }
+
 
     private fun filterNotes(): List<Note> {
         return notes.filter { !it.isDeleted }
@@ -103,14 +122,26 @@ class MainActivity : AppCompatActivity() {
         val jsonNotes = gson.toJson(notes)
         val sharedPreferences = getSharedPreferences("notes", Context.MODE_PRIVATE)
         sharedPreferences.edit().putString("notes", jsonNotes).apply()
+        sharedPreferences.edit().putInt("nextId", Note.nextId).apply() // Sauvegarder le prochain ID
     }
+
 
     private fun retrieveNotes(): List<Note> {
         val gson = Gson()
         val sharedPreferences = getSharedPreferences("notes", Context.MODE_PRIVATE)
         val jsonNotes = sharedPreferences.getString("notes", null)
+        Note.nextId = sharedPreferences.getInt("nextId", 1) // Restaurer le prochain ID
         return gson.fromJson(jsonNotes, object : TypeToken<List<Note>>() {}.type) ?: emptyList()
     }
+
+    private fun clearAllNotes() {
+        val sharedPreferences = getSharedPreferences("notes", Context.MODE_PRIVATE)
+        val editor = sharedPreferences.edit()
+        editor.clear()
+        editor.apply()
+    }
+
+
     companion object {
         private const val ADD_NOTE_REQUEST = 1
         const val EDIT_NOTE_REQUEST = 2

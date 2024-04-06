@@ -1,8 +1,10 @@
 package com.example.noteapp
 
+import Note
 import android.app.Activity
 import android.content.Intent
 import android.graphics.Color
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -64,19 +66,14 @@ class NoteAdapter(private val notes: List<Note>) :
         // Ajoutez un OnClickListener à la vue de l'élément
         holder.itemView.setOnClickListener {
             val intent = Intent(holder.itemView.context, AddNoteActivity::class.java)
+            val n = currentNote.id
+            Log.d("NoteAdapter", "Note $n")
             intent.putExtra("noteId", currentNote.id)
             intent.putExtra("noteTitle", currentNote.title)
             intent.putExtra("noteContent", currentNote.content)
-            (holder.itemView.context as Activity).startActivityForResult(
-                intent,
-                MainActivity.EDIT_NOTE_REQUEST
-            )
-
+            (holder.itemView.context as Activity).startActivityForResult(intent, MainActivity.EDIT_NOTE_REQUEST)
         }
     }
-
-
-
 
     override fun getItemCount(): Int {
         return notes.filter { !it.isDeleted }.size
