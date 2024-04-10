@@ -6,8 +6,15 @@ import android.content.Context
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.text.Editable
+import android.text.TextWatcher
 import android.util.Log
+import android.view.View
+import android.widget.EditText
 import android.widget.ImageButton
+import android.widget.Toast
+import androidx.appcompat.widget.TooltipCompat
+import androidx.core.widget.addTextChangedListener
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.gson.Gson
@@ -25,6 +32,10 @@ class MainActivity : AppCompatActivity() {
     private lateinit var recyclerView: RecyclerView
     private lateinit var noteAdapter: NoteAdapter
 
+    private lateinit var searchText: EditText
+    private lateinit var btnAnnuller : ImageButton
+    private lateinit var menuButton: ImageButton
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -41,6 +52,51 @@ class MainActivity : AppCompatActivity() {
         fab.setOnClickListener {
             startActivityForResult(Intent(this, AddNoteActivity::class.java), ADD_NOTE_REQUEST)
             // C'est déprecié, à corriger
+        }
+
+        // Rechercher une note
+        searchText = findViewById<EditText>(R.id.search_text)
+        val noMatchMessage = "Aucune note ne correspond à votre recherche."
+
+        searchText.addTextChangedListener { s ->
+            val searchQuery = s.toString()
+            val filteredNotes = filterNotesNotDeleted().filter { it.title.contains(searchQuery, true) || it.content.contains(searchQuery, true) }
+            if (searchQuery.isNotEmpty()) {
+                if (filteredNotes.isEmpty()) {
+                    // Afficher le message si aucune note ne correspond à la recherche
+                    Toast.makeText(this, noMatchMessage, Toast.LENGTH_SHORT).show()
+                    recyclerView.adapter = NoteAdapter(filteredNotes)
+                } else {
+                    recyclerView.adapter = NoteAdapter(filteredNotes)
+                }
+            }
+        }
+
+        //liste menu
+        val mesDonnees = listOf(
+            MonElement(" Mes favoris", R.drawable.coeur_vide),
+            MonElement(" Toutes les notes", R.drawable.list_notes),
+            MonElement(" Corbeille", R.drawable.corbeille),
+            MonElement(" Dossier", R.drawable.dossier)
+        )
+        val fondMenu = findViewById<RecyclerView>(R.id.fond_menu)
+        fondMenu.layoutManager = LinearLayoutManager(this)
+        fondMenu.adapter = AdaptateurMenu(mesDonnees)
+
+        menuButton=findViewById(R.id.menu_button)
+        TooltipCompat.setTooltipText(menuButton, "Menu");
+        menuButton.setOnClickListener {
+            if (fondMenu.visibility == View.VISIBLE) {
+                fondMenu.visibility = View.GONE
+            } else {
+                fondMenu.visibility = View.VISIBLE
+            }
+        }
+
+        btnAnnuller= findViewById(R.id.btn_annuler)
+        btnAnnuller.setOnClickListener {
+            searchText.setText("")
+            recyclerView.adapter = noteAdapter
         }
     }
 
@@ -93,7 +149,7 @@ class MainActivity : AppCompatActivity() {
     }
 
 
-    private fun filterNotes(): List<Note> {
+    private fun filterNotesNotDeleted(): List<Note> {
         return notes.filter { !it.isDeleted }
     }
 
@@ -104,7 +160,7 @@ class MainActivity : AppCompatActivity() {
         notes.addAll(retrieveNotes())
 
         // Filtrer les notes avec isDeleted à true
-        notesNotDeleted = filterNotes()
+        notesNotDeleted = filterNotesNotDeleted()
 
         noteAdapter = NoteAdapter(notesNotDeleted)
         recyclerView.adapter = noteAdapter
@@ -148,3 +204,6 @@ class MainActivity : AppCompatActivity() {
     }
 
 }
+
+//liste des items du menu
+data class MonElement(val texte: String, val icone: Int)

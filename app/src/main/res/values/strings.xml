@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">NoteApp</string>
+    <string name="rechercher_une_notes">rechercher une note...</string>
+    <string name="bouton_du_menu">Bouton du menu</string>
+    <string name="bouton_ajouter">bouton ajouter</string>
+    <string name="boutton_annuler">Boutton annuler</string>
 </resources>
