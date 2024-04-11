@@ -14,12 +14,13 @@ import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.snackbar.Snackbar
 
-class NoteAdapter(private val notes: List<Note>) :
+class NoteAdapter(private var notes: List<Note>) :
     RecyclerView.Adapter<NoteAdapter.NoteViewHolder>() {
 
 
     inner class NoteViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val noteTitle: TextView = itemView.findViewById(R.id.text_note_title)
+        val noteContent: TextView = itemView.findViewById(R.id.text_note_content)
         val noteDate: TextView = itemView.findViewById(R.id.text_note_date)
         val trashIcon: ImageView = itemView.findViewById(R.id.trash_icon)
 
@@ -35,6 +36,7 @@ class NoteAdapter(private val notes: List<Note>) :
     override fun onBindViewHolder(holder: NoteViewHolder, position: Int) {
         val currentNote = notes[position]
         holder.noteTitle.text = currentNote.title
+        holder.noteContent.text = currentNote.content
         holder.noteDate.text = currentNote.lastModified
 
         // Ajouter un OnClickListener à l'icône de la poubelle
@@ -73,9 +75,16 @@ class NoteAdapter(private val notes: List<Note>) :
             intent.putExtra("noteContent", currentNote.content)
             (holder.itemView.context as Activity).startActivityForResult(intent, MainActivity.EDIT_NOTE_REQUEST)
         }
+
+    }
+
+    fun updateNotes(newNotes: List<Note>) {
+        this.notes = newNotes
+        notifyDataSetChanged()
     }
 
     override fun getItemCount(): Int {
-        return notes.filter { !it.isDeleted }.size
+        return notes.size
     }
+
 }

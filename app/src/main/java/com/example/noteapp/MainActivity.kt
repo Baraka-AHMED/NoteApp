@@ -13,10 +13,15 @@ import android.view.View
 import android.widget.EditText
 import android.widget.ImageButton
 import android.widget.Toast
+import androidx.appcompat.app.ActionBarDrawerToggle
+import androidx.appcompat.widget.Toolbar
 import androidx.appcompat.widget.TooltipCompat
+import androidx.core.view.GravityCompat
 import androidx.core.widget.addTextChangedListener
+import androidx.drawerlayout.widget.DrawerLayout
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.navigation.NavigationView
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import java.text.SimpleDateFormat
@@ -34,12 +39,28 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var searchText: EditText
     private lateinit var btnAnnuller : ImageButton
-    private lateinit var menuButton: ImageButton
+
+    private lateinit var drawerLayout: DrawerLayout
+    private lateinit var toggle: ActionBarDrawerToggle
+
+    private var currentView: CurrentView = CurrentView.ALL_NOTES
+
+    private lateinit var navigationView: NavigationView
+
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
+        // Configure la Toolbar
+        val toolbar: Toolbar = findViewById(R.id.toolbar)
+        setSupportActionBar(toolbar)
+
+        drawerLayout = findViewById(R.id.drawer_layout)
+        toggle = ActionBarDrawerToggle(this, drawerLayout, toolbar, R.string.navigation_ouvrir, R.string.navigation_fermer)
+        drawerLayout.addDrawerListener(toggle)
+        toggle.syncState()
 
         notes = ArrayList()
 
@@ -49,56 +70,86 @@ class MainActivity : AppCompatActivity() {
         recyclerView.adapter = noteAdapter
 
         val fab: ImageButton = findViewById(R.id.fab)
+
+
         fab.setOnClickListener {
-            startActivityForResult(Intent(this, AddNoteActivity::class.java), ADD_NOTE_REQUEST)
-            // C'est déprecié, à corriger
-        }
-
-        // Rechercher une note
-        searchText = findViewById<EditText>(R.id.search_text)
-        val noMatchMessage = "Aucune note ne correspond à votre recherche."
-
-        searchText.addTextChangedListener { s ->
-            val searchQuery = s.toString()
-            val filteredNotes = filterNotesNotDeleted().filter { it.title.contains(searchQuery, true) || it.content.contains(searchQuery, true) }
-            if (searchQuery.isNotEmpty()) {
-                if (filteredNotes.isEmpty()) {
-                    // Afficher le message si aucune note ne correspond à la recherche
-                    Toast.makeText(this, noMatchMessage, Toast.LENGTH_SHORT).show()
-                    recyclerView.adapter = NoteAdapter(filteredNotes)
-                } else {
-                    recyclerView.adapter = NoteAdapter(filteredNotes)
+            when (currentView) {
+                CurrentView.ALL_NOTES -> {
+                    fab.setOnClickListener {
+                        startActivityForResult(Intent(this, AddNoteActivity::class.java), ADD_NOTE_REQUEST)
+                    }
+                }
+                // Met automtiquement une note dans les favoris si on l'ajoute depuis la fenetre favoris
+                CurrentView.FAVORITES -> {
+                    startActivityForResult(Intent(this, AddNoteActivity::class.java).apply {
+                        putExtra("isFavorite", true) // Ajout d'un extra pour indiquer que la note est favorite
+                    }, ADD_NOTE_REQUEST)
+                }
+                CurrentView.TRASH -> {
+                    fab.setOnClickListener {
+                        startActivityForResult(Intent(this, AddNoteActivity::class.java), ADD_NOTE_REQUEST)
+                    }
                 }
             }
         }
 
-        //liste menu
-        val mesDonnees = listOf(
-            MonElement(" Mes favoris", R.drawable.coeur_vide),
-            MonElement(" Toutes les notes", R.drawable.list_notes),
-            MonElement(" Corbeille", R.drawable.corbeille),
-            MonElement(" Dossier", R.drawable.dossier)
-        )
-        val fondMenu = findViewById<RecyclerView>(R.id.fond_menu)
-        fondMenu.layoutManager = LinearLayoutManager(this)
-        fondMenu.adapter = AdaptateurMenu(mesDonnees)
+        searchText = findViewById(R.id.search_text)
+        val noMatchMessage = "Aucune note ne correspond à votre recherche."
 
-        menuButton=findViewById(R.id.menu_button)
-        TooltipCompat.setTooltipText(menuButton, "Menu");
-        menuButton.setOnClickListener {
-            if (fondMenu.visibility == View.VISIBLE) {
-                fondMenu.visibility = View.GONE
+        //
+        var isToastDisplayed = false // vérifie si le toast est déja affiché ou pas
+
+        searchText.addTextChangedListener { s ->
+            val searchQuery = s.toString()
+            val filteredNotes = filterNotesBasedOnCurrentView(searchQuery) // Filtre les notes en fonction de la vue actuellement sélectionnée et de la recherche
+            if (searchQuery.isNotEmpty()) {
+                if (filteredNotes.isEmpty() && !isToastDisplayed) {
+                    Toast.makeText(this, "Aucune note ne correspond à votre recherche.", Toast.LENGTH_SHORT).show() // Affiche un Toast indiquant qu'aucune note ne correspond à la recherche
+                    isToastDisplayed = true // Marque que le Toast est affiché
+                } else {
+                    isToastDisplayed = false // Réinitialise la variable indiquant que le Toast a été affiché
+                }
+                noteAdapter.updateNotes(filteredNotes)
             } else {
-                fondMenu.visibility = View.VISIBLE
+                applyCurrentViewFilter()
             }
         }
 
-        btnAnnuller= findViewById(R.id.btn_annuler)
+
+
+        btnAnnuller = findViewById(R.id.btn_annuler)
         btnAnnuller.setOnClickListener {
             searchText.setText("")
             recyclerView.adapter = noteAdapter
         }
+
+        navigationView = findViewById(R.id.nav_view)
+        navigationView.setNavigationItemSelectedListener { menuItem ->
+            currentView = when (menuItem.itemId) {
+                R.id.nav_accueil -> CurrentView.ALL_NOTES
+                R.id.nav_notes -> CurrentView.FAVORITES
+                R.id.nav_corbeille -> CurrentView.TRASH
+                else -> currentView
+            }
+            searchText.setText("") // Réinitialiser la barre de recherche
+            applyCurrentViewFilter() // Applique le filtre de vue actuel
+            drawerLayout.closeDrawer(GravityCompat.START)
+            true
+        }
+
     }
+    private fun applyCurrentViewFilter() {
+        val filteredNotes = filterNotesBasedOnCurrentView(searchText.text.toString())
+        noteAdapter.updateNotes(filteredNotes)
+    }
+    private fun filterNotesBasedOnCurrentView(searchQuery: String): List<Note> {
+        return when (currentView) {
+            CurrentView.ALL_NOTES -> notes.filter { !it.isDeleted && (it.title.contains(searchQuery, true) || it.content.contains(searchQuery, true)) }
+            CurrentView.FAVORITES -> notes.filter { it.isFavorite && !it.isDeleted && (it.title.contains(searchQuery, true) || it.content.contains(searchQuery, true)) }
+            CurrentView.TRASH -> notes.filter { it.isDeleted && (it.title.contains(searchQuery, true) || it.content.contains(searchQuery, true)) }
+        }
+    }
+
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
@@ -162,9 +213,26 @@ class MainActivity : AppCompatActivity() {
         // Filtrer les notes avec isDeleted à true
         notesNotDeleted = filterNotesNotDeleted()
 
-        noteAdapter = NoteAdapter(notesNotDeleted)
-        recyclerView.adapter = noteAdapter
-        Log.d("MainActivity", "Notes restored: $notes")
+        noteAdapter.updateNotes(notesNotDeleted)
+
+        // Réinitialiser la recherche
+        searchText.setText("")
+
+        // Sélectionner l'onglet actif
+        when (currentView) {
+            CurrentView.ALL_NOTES -> {
+                // Sélectionner l'onglet correspondant dans la navigationView
+                navigationView.setCheckedItem(R.id.nav_accueil)
+            }
+            CurrentView.FAVORITES -> {
+                // Sélectionner l'onglet correspondant dans la navigationView
+                navigationView.setCheckedItem(R.id.nav_notes)
+            }
+            CurrentView.TRASH -> {
+                // Sélectionner l'onglet correspondant dans la navigationView
+                navigationView.setCheckedItem(R.id.nav_corbeille)
+            }
+        }
     }
 
     override fun onStop() {
@@ -183,9 +251,12 @@ class MainActivity : AppCompatActivity() {
 
 
     private fun retrieveNotes(): List<Note> {
+
         val gson = Gson()
         val sharedPreferences = getSharedPreferences("notes", Context.MODE_PRIVATE)
         val jsonNotes = sharedPreferences.getString("notes", null)
+        Log.d("SharedPreferences", "Contenu de 'notes': $jsonNotes")
+
         Note.nextId = sharedPreferences.getInt("nextId", 1) // Restaurer le prochain ID
         return gson.fromJson(jsonNotes, object : TypeToken<List<Note>>() {}.type) ?: emptyList()
     }
@@ -197,6 +268,9 @@ class MainActivity : AppCompatActivity() {
         editor.apply()
     }
 
+    enum class CurrentView {
+        ALL_NOTES, FAVORITES, TRASH
+    }
 
     companion object {
         private const val ADD_NOTE_REQUEST = 1
@@ -204,6 +278,3 @@ class MainActivity : AppCompatActivity() {
     }
 
 }
-
-//liste des items du menu
-data class MonElement(val texte: String, val icone: Int)

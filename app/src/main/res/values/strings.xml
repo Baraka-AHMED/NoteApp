@@ -4,4 +4,6 @@
     <string name="bouton_du_menu">Bouton du menu</string>
     <string name="bouton_ajouter">bouton ajouter</string>
     <string name="boutton_annuler">Boutton annuler</string>
+    <string name="navigation_ouvrir">Ouvrir le menu de navigation</string>
+    <string name="navigation_fermer">Fermer le menu de navigation</string>
 </resources>
