@@ -8,6 +8,7 @@ import android.util.Log
 import android.view.KeyEvent
 import android.view.MenuItem
 import android.widget.EditText
+import android.widget.ImageButton
 import androidx.appcompat.widget.Toolbar
 import androidx.core.content.ContextCompat
 import com.google.android.material.floatingactionbutton.FloatingActionButton
@@ -16,6 +17,10 @@ class AddNoteActivity : AppCompatActivity() {
 
     private lateinit var addNoteTitle: EditText
     private lateinit var addNoteContent: EditText
+    private lateinit var btnFavorite: ImageButton
+    private var favoriteState = ""  // État initial
+
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -28,7 +33,7 @@ class AddNoteActivity : AppCompatActivity() {
         addNoteTitle = findViewById(R.id.add_note_title)
         addNoteContent = findViewById(R.id.add_note_content)
 
-        // Écouter les événements de touche pour le bouton retour
+        // Écouter les événements de touche pour le bouton retour du téléphone
         addNoteTitle.setOnKeyListener { _, keyCode, event ->
             if (keyCode == KeyEvent.KEYCODE_BACK && event.action == KeyEvent.ACTION_UP) {
                 saveNoteIfNotEmpty()
@@ -38,11 +43,25 @@ class AddNoteActivity : AppCompatActivity() {
             }
         }
 
+        btnFavorite = findViewById(R.id.btn_options)
+        btnFavorite.setOnClickListener {
+            favoriteState = if (favoriteState == "noteNotFavorite") "noteIsFavorite" else "noteNotFavorite"  // Bascule l'état du favori
+            basculeStatFavoriteButton(favoriteState)
+            Log.d("Favorite", "Favorite $favoriteState")
+        }
+
         val noteTitle = intent.getStringExtra("noteTitle")
         val noteContent = intent.getStringExtra("noteContent")
+        val noteIsFavorite = intent.getStringExtra("noteIsFavorite")
 
+        Log.d("Favorite444", "Favorite444 $noteIsFavorite")
         addNoteTitle.setText(noteTitle)
         addNoteContent.setText(noteContent)
+        if (noteIsFavorite != null) {
+            favoriteState = noteIsFavorite
+        }
+        basculeStatFavoriteButton(favoriteState)
+
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
@@ -65,7 +84,10 @@ class AddNoteActivity : AppCompatActivity() {
                 putExtra("noteId", noteId)
                 putExtra("noteTitle", noteTitle)
                 putExtra("noteContent", noteContent)
+                putExtra("noteIsFavorite", favoriteStateToBoolean())  // Assurez-vous que cette clé est correcte
             }
+            Log.d("Favorite22", "Favorite22 $favoriteState")
+
             setResult(Activity.RESULT_OK, intent)
             finish()
         } else {
@@ -73,6 +95,30 @@ class AddNoteActivity : AppCompatActivity() {
             finish()
         }
     }
+
+
+    // Permet de basculer l'état du favori en fonction d'un boom
+    private fun basculeStatFavoriteButton(state: String) {
+        if (state == "noteIsFavorite") {
+            btnFavorite.setImageResource(R.drawable.ic_star_solid)
+        } else if (state == "noteNotFavorite" ) {
+            btnFavorite.setImageResource(R.drawable.ic_star_regular)
+        }
+    }
+
+    private fun favoriteStateToBoolean(): Boolean {
+        if (favoriteState == "noteIsFavorite") {
+            return true
+        } else if (favoriteState == "noteNotFavorite" ) {
+            return false
+        }
+        return false
+    }
+
+
+
+
+
 
 }
 

@@ -9,12 +9,16 @@ tools:showIn="navigation_view">
         android:icon="@drawable/list_notes"
         android:title="Toutes les notes" />
     <item
-        android:id="@+id/nav_notes"
+        android:id="@+id/nav_favoris"
         android:icon="@drawable/coeur_vide"
         android:title="Favoris" />
     <item
         android:id="@+id/nav_corbeille"
         android:icon="@drawable/corbeille"
         android:title="Corbeille" />
+    <item
+        android:id="@+id/nav_reinitialiser"
+        android:icon="@drawable/icone_refresh"
+        android:title="Réinitialiser l'application" />
 </group>
 </menu>

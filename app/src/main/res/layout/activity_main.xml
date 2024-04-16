@@ -4,6 +4,7 @@
     android:id="@+id/drawer_layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="#FDF0E7"
     tools:context=".MainActivity">
 
     <!-- ConstraintLayout pour le contenu principal -->
@@ -16,7 +17,7 @@
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
-            android:background="?attr/colorPrimary"
+            android:background="#82C46C"
             app:layout_constraintTop_toTopOf="parent"
             android:elevation="4dp"/>
 
@@ -31,17 +32,26 @@
             <!-- Champ de recherche -->
             <EditText
                 android:id="@+id/search_text"
-                android:layout_width="351dp"
-                android:layout_height="38dp"
+                android:layout_width="331dp"
+                android:layout_height="37dp"
                 android:layout_alignParentEnd="true"
                 android:layout_centerVertical="true"
                 android:layout_marginStart="20dp"
                 android:layout_marginEnd="20dp"
                 android:background="@drawable/bords_arrondis"
-                android:drawableStart="@drawable/search"
                 android:hint="@string/rechercher_une_notes"
                 android:importantForAutofill="no"
-                android:inputType="text" />
+                android:inputType="text"
+                android:paddingLeft="10dp"/>
+
+            <!--Bouton trie -->
+            <ImageButton
+                android:id="@+id/btn_trie"
+                android:layout_width="37dp"
+                android:layout_height="match_parent"
+                android:background="@android:color/transparent"
+                android:layout_marginStart="5dp"
+                app:srcCompat="@drawable/trie" />
 
             <!-- Bouton annuler -->
             <ImageButton
@@ -62,7 +72,7 @@
             android:layout_height="0dp"
             app:layout_constraintBottom_toTopOf="@+id/fab"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintHorizontal_bias="1.0"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/partieSearch"
             app:layout_constraintVertical_bias="0.0" />
@@ -73,7 +83,7 @@
             android:layout_height="39dp"
             android:layout_margin="16dp"
             android:background="?attr/selectableItemBackgroundBorderless"
-            android:src="@drawable/baseline_add_24"
+            android:src="@drawable/baseline_add_circle_outline_24"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             android:contentDescription="@string/bouton_ajouter" />
@@ -86,6 +96,7 @@
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
         android:layout_gravity="start"
+        android:background="#FDF0E7"
         app:menu="@menu/notes_menu" />
 
 </androidx.drawerlayout.widget.DrawerLayout>

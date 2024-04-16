@@ -2,19 +2,22 @@ package com.example.noteapp
 
 import Note
 import android.app.Activity
+import android.app.AlertDialog
 import android.content.Intent
-import android.graphics.Color
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
-import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.snackbar.Snackbar
 
-class NoteAdapter(private var notes: List<Note>) :
+class NoteAdapter(
+    private var notes: ArrayList<Note>,
+    private val onNotesChanged: () -> Unit,
+    private val onDeleteNote: (Int) -> Unit  // Ajout d'une fonction pour gérer la suppression
+) :
     RecyclerView.Adapter<NoteAdapter.NoteViewHolder>() {
 
 
@@ -41,28 +44,34 @@ class NoteAdapter(private var notes: List<Note>) :
 
         // Ajouter un OnClickListener à l'icône de la poubelle
         holder.trashIcon.setOnClickListener {
-            // Modifier l'attribut isDeleted de la note à true
-            notes[position].isDeleted = true
-            notifyDataSetChanged()
-
-            // Afficher un message de confirmation avec un bouton "Annuler"
-            val snackbar = Snackbar.make(
-                holder.itemView,
-                "Note déplacée vers la corbeille",
-                Snackbar.LENGTH_LONG
-            )
-            snackbar.setAction("Annuler") {
-                // Annuler le déplacement de la note
-                notes[position].isDeleted = false
-                notifyDataSetChanged()
+            // Marquer la note comme supprimée
+            if (currentNote.isDeleted) {
+                // Afficher une boîte de dialogue de confirmation
+                val context = holder.itemView.context
+                AlertDialog.Builder(context).apply {
+                    setTitle("Confirmation de suppression")
+                    setMessage("Êtes-vous sûr de vouloir supprimer cette note définitivement ?")
+                    setPositiveButton("Supprimer") { _, _ ->
+                        onDeleteNote(currentNote.id)  // Utilise la fonction passée pour supprimer la note
+                    }
+                    setNegativeButton("Annuler", null)
+                    show()
+                }
             }
-            snackbar.setActionTextColor(
-                ContextCompat.getColor(
-                    holder.itemView.context,
-                    R.color.white
-                )
-            ) // Couleur personnalisée pour le bouton "Annuler"
-            snackbar.show()
+            else {
+                currentNote.isDeleted = true
+                // Afficher un message de confirmation avec un bouton "Annuler"
+                val snackbar = Snackbar.make(holder.itemView, "Note déplacée vers la corbeille", Snackbar.LENGTH_LONG)
+                snackbar.setAction("Annuler") {
+                    // Utiliser l'ID pour retrouver la note et annuler la suppression
+                    currentNote.isDeleted = false
+                    onNotesChanged()
+                }
+                snackbar.show()
+            }
+            onNotesChanged()
+
+
         }
 
         // Ajoutez un OnClickListener à la vue de l'élément
@@ -73,12 +82,13 @@ class NoteAdapter(private var notes: List<Note>) :
             intent.putExtra("noteId", currentNote.id)
             intent.putExtra("noteTitle", currentNote.title)
             intent.putExtra("noteContent", currentNote.content)
+            intent.putExtra("noteIsFavorite", currentNote.isFavorite)
             (holder.itemView.context as Activity).startActivityForResult(intent, MainActivity.EDIT_NOTE_REQUEST)
         }
 
     }
 
-    fun updateNotes(newNotes: List<Note>) {
+    fun updateNotes(newNotes: ArrayList<Note>) {
         this.notes = newNotes
         notifyDataSetChanged()
     }
