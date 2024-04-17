@@ -20,8 +20,6 @@ class AddNoteActivity : AppCompatActivity() {
     private lateinit var btnFavorite: ImageButton
     private var favoriteState = ""  // État initial
 
-
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_add_note)
@@ -42,30 +40,27 @@ class AddNoteActivity : AppCompatActivity() {
                 false
             }
         }
-
+        // Initialisation du bouton favoris
         btnFavorite = findViewById(R.id.btn_options)
         btnFavorite.setOnClickListener {
             favoriteState = if (favoriteState == "noteNotFavorite") "noteIsFavorite" else "noteNotFavorite"  // Bascule l'état du favori
             basculeStatFavoriteButton(favoriteState)
-            Log.d("Favorite", "Favorite $favoriteState")
         }
-
         val noteTitle = intent.getStringExtra("noteTitle")
         val noteContent = intent.getStringExtra("noteContent")
         val noteIsFavorite = intent.getStringExtra("noteIsFavorite")
 
-        Log.d("Favorite444", "Favorite444 $noteIsFavorite")
         addNoteTitle.setText(noteTitle)
         addNoteContent.setText(noteContent)
         if (noteIsFavorite != null) {
             favoriteState = noteIsFavorite
         }
         basculeStatFavoriteButton(favoriteState)
-
     }
-
+    // Quand on clique sur le bouton de retour de la toolbar on enregistre la note si elle n'est pas vide
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
+            // Retour à l'accueil
             android.R.id.home -> {
                 saveNoteIfNotEmpty()
                 true
@@ -73,12 +68,13 @@ class AddNoteActivity : AppCompatActivity() {
             else -> super.onOptionsItemSelected(item)
         }
     }
-
+    //Sauvegarder une note si elle n'est pas vide
     private fun saveNoteIfNotEmpty() {
+        // Remplissage des EditText
         val noteId = intent.getIntExtra("noteId", 0)
         val noteTitle = addNoteTitle.text.toString().trim()
         val noteContent = addNoteContent.text.toString().trim()
-
+        // Si la note n'est pas vide
         if (noteTitle.isNotEmpty() || noteContent.isNotEmpty()) {
             val intent = Intent().apply {
                 putExtra("noteId", noteId)
@@ -86,8 +82,6 @@ class AddNoteActivity : AppCompatActivity() {
                 putExtra("noteContent", noteContent)
                 putExtra("noteIsFavorite", favoriteStateToBoolean())  // Assurez-vous que cette clé est correcte
             }
-            Log.d("Favorite22", "Favorite22 $favoriteState")
-
             setResult(Activity.RESULT_OK, intent)
             finish()
         } else {
@@ -95,9 +89,7 @@ class AddNoteActivity : AppCompatActivity() {
             finish()
         }
     }
-
-
-    // Permet de basculer l'état du favori en fonction d'un boom
+    // Permet de basculer l'état du favori
     private fun basculeStatFavoriteButton(state: String) {
         if (state == "noteIsFavorite") {
             btnFavorite.setImageResource(R.drawable.ic_star_solid)
@@ -105,7 +97,7 @@ class AddNoteActivity : AppCompatActivity() {
             btnFavorite.setImageResource(R.drawable.ic_star_regular)
         }
     }
-
+    // Permet de basculer l'état du favori
     private fun favoriteStateToBoolean(): Boolean {
         if (favoriteState == "noteIsFavorite") {
             return true
@@ -114,12 +106,6 @@ class AddNoteActivity : AppCompatActivity() {
         }
         return false
     }
-
-
-
-
-
-
 }
 
 

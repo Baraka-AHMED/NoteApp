@@ -4,7 +4,6 @@
     android:id="@+id/drawer_layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#FDF0E7"
     tools:context=".MainActivity">
 
     <!-- ConstraintLayout pour le contenu principal -->
@@ -17,7 +16,7 @@
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
-            android:background="#82C46C"
+            android:background="@color/main"
             app:layout_constraintTop_toTopOf="parent"
             android:elevation="4dp"/>
 
@@ -36,7 +35,7 @@
                 android:layout_height="37dp"
                 android:layout_alignParentEnd="true"
                 android:layout_centerVertical="true"
-                android:layout_marginStart="20dp"
+                android:layout_marginStart="40dp"
                 android:layout_marginEnd="20dp"
                 android:background="@drawable/bords_arrondis"
                 android:hint="@string/rechercher_une_notes"
@@ -51,7 +50,7 @@
                 android:layout_height="match_parent"
                 android:background="@android:color/transparent"
                 android:layout_marginStart="5dp"
-                app:srcCompat="@drawable/trie" />
+                app:srcCompat="@drawable/ic_expand_less" />
 
             <!-- Bouton annuler -->
             <ImageButton
@@ -96,7 +95,6 @@
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
         android:layout_gravity="start"
-        android:background="#FDF0E7"
         app:menu="@menu/notes_menu" />
 
 </androidx.drawerlayout.widget.DrawerLayout>

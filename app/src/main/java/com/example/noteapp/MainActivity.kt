@@ -30,7 +30,21 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-
+/**
+ * Fonctionnalités de base
+ * Ajout
+ * Suppression
+ * Modification
+ * SharedPreferences
+ *
+ * Fonctionnalités ajoutées
+ * Trie par date de mise à jour
+ * Recherche
+ * Favoris
+ * Reinitialiser les notes
+ * Menu pour afficher les notes par catégorie
+ * Adaption du thème de l'application en fonction du theme du téléphone
+ */
 class MainActivity : AppCompatActivity() {
 
     private lateinit var notes: ArrayList<Note>
@@ -161,6 +175,7 @@ class MainActivity : AppCompatActivity() {
         //
         var isToastDisplayed = false // vérifie si le toast est déja affiché ou pas
 
+        // Configuration de la barre de recherche pour filtrer les notes.
         searchText.addTextChangedListener { s ->
             val searchQuery = s.toString()
             val filteredNotes = filterNotesBasedOnCurrentView(searchQuery) // Filtre les notes en fonction de la vue actuellement sélectionnée et de la recherche
@@ -176,28 +191,27 @@ class MainActivity : AppCompatActivity() {
                 applyCurrentViewFilter()
             }
         }
-
+        // Réinitialisation de la barre de recherche lors de l'appui sur le bouton annuler.
         btnAnnuller = findViewById(R.id.btn_annuler)
         btnAnnuller.setOnClickListener {
             searchText.setText("")
             recyclerView.adapter = noteAdapter
         }
 
+        // Configuration de la navigation en fonction de la vue actuelle
         navigationView = findViewById(R.id.nav_view)
+        // Définition du gestionnaire d'événements pour les éléments de menu de la vue de navigation
         navigationView.setNavigationItemSelectedListener { menuItem ->
             currentView = when (menuItem.itemId) {
-                R.id.nav_accueil -> {
-                    fab.visibility = View.VISIBLE
+                // Mise à jour de la vue actuelle en fonction de l'élément de menu sélectionné
+                R.id.nav_accueil -> { fab.visibility = View.VISIBLE
                     supportActionBar?.title = "NoteApp"  // Mettre à jour le titre de la Toolbar
                     CurrentView.ALL_NOTES
-
                 }
                 R.id.nav_favoris -> {
                     fab.visibility = View.VISIBLE
                     supportActionBar?.title = "Favoris"  // Mettre à jour le titre de la Toolbar
                     CurrentView.FAVORITES
-
-
                 }
                 R.id.nav_corbeille -> {
                     fab.visibility = View.INVISIBLE
@@ -217,31 +231,36 @@ class MainActivity : AppCompatActivity() {
                     true // Indique que l'événement de menu est traité
                     currentView
                 }
-
+                // Si aucun des éléments de menu ci-dessus n'est sélectionné, conserver la vue actuelle
                 else -> currentView
             }
             searchText.setText("") // Réinitialiser la barre de recherche
             applyCurrentViewFilter() // Applique le filtre de vue actuel
-            drawerLayout.closeDrawer(GravityCompat.START)
-
+            drawerLayout.closeDrawer(GravityCompat.START) // Fermer le menu
             true
-
         }
-
     }
+
+    // Applique un filtre basé sur la vue actuellement sélectionnée.
     private fun applyCurrentViewFilter() {
         val filteredNotes = filterNotesBasedOnCurrentView(searchText.text.toString())
         noteAdapter.updateNotes(filteredNotes as ArrayList<Note>)
     }
+
+    // Cette fonction filtre les notes en fonction de la vue actuelle et de la requête de recherche
     private fun filterNotesBasedOnCurrentView(searchQuery: String): List<Note> {
+        // Retourne une liste de notes filtrée en fonction de la vue actuelle
         return when (currentView) {
+            // Si la vue actuelle est "Toutes les notes", retourne toutes les notes non supprimées qui contiennent la requête de recherche dans le titre ou le contenu
             CurrentView.ALL_NOTES -> notes.filter { !it.isDeleted && (it.title.contains(searchQuery, true) || it.content.contains(searchQuery, true)) }
+            // Si la vue actuelle est "Favoris", retourne toutes les notes favorites non supprimées qui contiennent la requête de recherche dans le titre ou le contenu
             CurrentView.FAVORITES -> notes.filter { it.isFavorite && !it.isDeleted && (it.title.contains(searchQuery, true) || it.content.contains(searchQuery, true)) }
+            // Si la vue actuelle est "Corbeille", retourne toutes les notes supprimées qui contiennent la requête de recherche dans le titre ou le contenu
             CurrentView.TRASH -> notes.filter { it.isDeleted && (it.title.contains(searchQuery, true) || it.content.contains(searchQuery, true)) }
         }
     }
 
-
+    //Resultats renvoyées par AddNoteActivty
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         if (resultCode == Activity.RESULT_OK) {
@@ -293,30 +312,21 @@ class MainActivity : AppCompatActivity() {
                         }
                     }
                 }
-
             }
         }
     }
 
-
-    private fun filterNotesNotDeleted(): List<Note> {
-        return notes.filter { !it.isDeleted }
-    }
-
+    // Restauration des notes sauvegardées lors du démarrage de l'activité.
     override fun onStart() {
         super.onStart()
         // Restaurer les notes sauvegardées
         notes.clear()
         notes.addAll(retrieveNotes())
-
         // Filtrer les notes avec isDeleted à true
-        notesNotDeleted = filterNotesNotDeleted()
-
+        notesNotDeleted = notes.filter { !it.isDeleted }
         noteAdapter.updateNotes(notesNotDeleted as ArrayList<Note>)
-
         // Réinitialiser la recherche
         searchText.setText("")
-
         // Sélectionner l'onglet actif
         when (currentView) {
             CurrentView.ALL_NOTES -> {
@@ -331,6 +341,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    // Sauvegarde des notes dans les préférences partagées lors de l'arrêt de l'activité.
     override fun onStop() {
         super.onStop()
         // Sauvegarder les notes avant de quitter l'activité
@@ -344,10 +355,7 @@ class MainActivity : AppCompatActivity() {
         sharedPreferences.edit().putString("notes", jsonNotes).apply()
         sharedPreferences.edit().putInt("nextId", Note.nextId).apply() // Sauvegarder le prochain ID
     }
-
-
     private fun retrieveNotes(): List<Note> {
-
         val gson = Gson()
         val sharedPreferences = getSharedPreferences("notes", Context.MODE_PRIVATE)
         val jsonNotes = sharedPreferences.getString("notes", null)
@@ -356,21 +364,16 @@ class MainActivity : AppCompatActivity() {
         Note.nextId = sharedPreferences.getInt("nextId", 1) // Restaurer le prochain ID
         return gson.fromJson(jsonNotes, object : TypeToken<List<Note>>() {}.type) ?: emptyList()
     }
-
     private fun clearAllNotes() {
         val sharedPreferences = getSharedPreferences("notes", Context.MODE_PRIVATE)
         val editor = sharedPreferences.edit()
         editor.clear()
         editor.apply()
     }
-
     /**
      * Exécute de manière asynchrone le nettoyage des notes.
      * Utilise les coroutines pour effectuer les opérations lourdes en arrière-plan (Dispatchers.IO)
      * et mettre à jour l'interface utilisateur sur le thread principal (Dispatchers.Main).
-     *
-     * `clearAllNotes()` nettoie les données persistantes.
-     * `notes.clear()` et `noteAdapter.updateNotes(notes)` rafraîchissent l'interface utilisateur.
      */
     private fun clearAllNotesAsync() {
         CoroutineScope(Dispatchers.IO).launch {
@@ -382,6 +385,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    //Supprimer une note définitivement
     fun deleteNotePermanently(noteId: Int) {
         val noteIndex = notes.indexOfFirst { it.id == noteId }
         if (noteIndex != -1) {
@@ -391,14 +395,11 @@ class MainActivity : AppCompatActivity() {
             applyCurrentViewFilter()
         }
     }
-
     enum class CurrentView {
         ALL_NOTES, FAVORITES, TRASH
     }
-
     companion object {
         private const val ADD_NOTE_REQUEST = 1
         const val EDIT_NOTE_REQUEST = 2
     }
-
 }
