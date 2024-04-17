@@ -11,7 +11,6 @@ class Note(
     // Initialisation de l'ID qui s'incrémente à chaque instance
     var id: Int = 0
         private set
-
     init {
         id = getNextNoteId()
     }

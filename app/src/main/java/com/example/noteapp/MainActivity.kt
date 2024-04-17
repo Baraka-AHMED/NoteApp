@@ -44,6 +44,7 @@ import java.util.Locale
  * Reinitialiser les notes
  * Menu pour afficher les notes par catégorie
  * Adaption du thème de l'application en fonction du theme du téléphone
+ * Création du logo de l'application
  */
 class MainActivity : AppCompatActivity() {
 
@@ -171,8 +172,6 @@ class MainActivity : AppCompatActivity() {
 
         searchText = findViewById(R.id.search_text)
         val noMatchMessage = "Aucune note ne correspond à votre recherche."
-
-        //
         var isToastDisplayed = false // vérifie si le toast est déja affiché ou pas
 
         // Configuration de la barre de recherche pour filtrer les notes.
@@ -280,20 +279,17 @@ class MainActivity : AppCompatActivity() {
                         notes.add(note)
                         noteAdapter.notifyDataSetChanged( )
                         saveNotes()
+                        Toast.makeText(this, "Note ajoutée avec succès", Toast.LENGTH_SHORT).show()
                     }
                 }
                 EDIT_NOTE_REQUEST -> {
                     val noteId = data?.getIntExtra("noteId", -1)
-                    Log.d("Note ID", "Note $noteId")
-
                     val noteTitle = data?.getStringExtra("noteTitle")
                     val noteContent = data?.getStringExtra("noteContent")
                     val noteIsFavorite = data?.getBooleanExtra("noteIsFavorite", false)  // Correction de la clé ici
-
                     if (noteId != null && noteId != -1) {
                         val note = notes.find { it.id == noteId }
                         val n = note?.id
-                        Log.d("Note", "Note $n")
                         if (note != null) {
                             note.title = noteTitle ?: note.title
                             note.content = noteContent ?: note.content
@@ -304,11 +300,10 @@ class MainActivity : AppCompatActivity() {
                                     Locale.getDefault()
                                 ).format(Date())
                             }
-                            Log.d("Favorite33", "Favorite33 $noteIsFavorite")
-
                             note.isFavorite = noteIsFavorite ?: note.isFavorite
                             noteAdapter.notifyDataSetChanged()
                             saveNotes()
+                            Toast.makeText(this, "Note modifiée avec succès", Toast.LENGTH_SHORT).show()
                         }
                     }
                 }
@@ -359,8 +354,6 @@ class MainActivity : AppCompatActivity() {
         val gson = Gson()
         val sharedPreferences = getSharedPreferences("notes", Context.MODE_PRIVATE)
         val jsonNotes = sharedPreferences.getString("notes", null)
-        Log.d("SharedPreferences", "Contenu de 'notes': $jsonNotes")
-
         Note.nextId = sharedPreferences.getInt("nextId", 1) // Restaurer le prochain ID
         return gson.fromJson(jsonNotes, object : TypeToken<List<Note>>() {}.type) ?: emptyList()
     }

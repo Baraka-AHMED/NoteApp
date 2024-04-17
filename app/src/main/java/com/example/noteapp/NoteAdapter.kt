@@ -4,7 +4,6 @@ import Note
 import android.app.Activity
 import android.app.AlertDialog
 import android.content.Intent
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -64,14 +63,13 @@ class NoteAdapter(
             }
             onNotesChanged()  // Rafraîchir l'affichage après une modification
         }
-
         // Gérer le clic sur l'élément pour ouvrir l'activité d'édition
         holder.itemView.setOnClickListener {
             val intent = Intent(holder.itemView.context, AddNoteActivity::class.java).apply {
                 putExtra("noteId", currentNote.id)
                 putExtra("noteTitle", currentNote.title)
                 putExtra("noteContent", currentNote.content)
-                putExtra("noteIsFavorite", currentNote.isFavorite)
+                putExtra("noteIsFavorite", if (currentNote.isFavorite == true) "noteIsFavorite" else "noteNotFavorite")
             }
             (holder.itemView.context as Activity).startActivityForResult(intent, MainActivity.EDIT_NOTE_REQUEST)
         }
